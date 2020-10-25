@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_grraph"
+    app:startDestination="@id/startFragment">
+
+    <fragment
+        android:id="@+id/startFragment"
+        android:name="uz.fozilbekimomov.ussdyordamchi.ui.start.StartFragment"
+        android:label="StartFragment"
+        tools:layout="@layout/fragment_start">
+        <action
+            android:id="@+id/action_startFragment_to_subServiceFragment"
+            app:destination="@id/subServiceFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/subServiceFragment"
+        android:name="uz.fozilbekimomov.ussdyordamchi.ui.subService.SubServiceFragment"
+        android:label="SubServiceFragment"
+        tools:layout="@layout/fragment_data">
+
+        <argument
+            android:name="serviceId"
+            app:argType="integer" />
+
+        <argument
+            android:name="companyId"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="position"
+            app:argType="integer" />
+
+    </fragment>
+</navigation>

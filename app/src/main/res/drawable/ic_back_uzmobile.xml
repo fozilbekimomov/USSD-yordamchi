@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="747dp"
+    android:viewportWidth="360"
+    android:viewportHeight="747">
+  <path
+      android:pathData="M0,0h360v747h-360z"
+      android:strokeWidth="1"
+      android:fillColor="#F6F7F9"
+      android:fillType="evenOdd"
+      android:strokeColor="#00000000"/>
+  <path
+      android:pathData="M-215,67.27a307.5,155.625 0,1 0,615 0a307.5,155.625 0,1 0,-615 0z"
+      android:strokeWidth="1"
+      android:fillColor="@color/uzmobile"
+      android:fillType="evenOdd"
+      android:strokeColor="#00000000"/>
+</vector>
