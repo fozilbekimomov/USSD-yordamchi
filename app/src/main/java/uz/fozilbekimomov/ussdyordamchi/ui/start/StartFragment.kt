@@ -5,7 +5,9 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -16,20 +18,21 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.MarginPageTransformer
+import androidx.viewpager2.widget.ViewPager2
+import com.rd.PageIndicatorView
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import uz.fozilbekimomov.ussdyordamchi.BuildConfig
 import uz.fozilbekimomov.ussdyordamchi.R
 import uz.fozilbekimomov.ussdyordamchi.core.list.UniversalGridItemDecoration
-import uz.fozilbekimomov.ussdyordamchi.core.list.adapters.CompaniesAdapter
 import uz.fozilbekimomov.ussdyordamchi.core.list.adapters.ServiceAdapter
+import uz.fozilbekimomov.ussdyordamchi.core.list.adapters.ViewPagerAdapter
 import uz.fozilbekimomov.ussdyordamchi.core.models.Companies
 import uz.fozilbekimomov.ussdyordamchi.core.models.DataState
 import uz.fozilbekimomov.ussdyordamchi.core.models.Services
 import uz.fozilbekimomov.ussdyordamchi.core.utils.getColorString
 import uz.fozilbekimomov.ussdyordamchi.core.utils.getHomeBackGround
 import uz.fozilbekimomov.ussdyordamchi.core.utils.setItemStatusBarColor
-import uz.fozilbekimomov.ussdyordamchi.core.views.SmoothViewPager
 
 
 /**
@@ -41,7 +44,7 @@ import uz.fozilbekimomov.ussdyordamchi.core.views.SmoothViewPager
  * @project USSD yordamchi
  */
 class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
-    ServiceAdapter.OnServiceClickListener, ViewPager.OnPageChangeListener {
+    ServiceAdapter.OnServiceClickListener {
 
     private var company: Companies? = null
     private var data: List<Companies>? = null
@@ -51,10 +54,16 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
 
     private var currentColorPosition = 0
 
-    private val companiesAdapter = CompaniesAdapter()
+    //    private val companiesAdapter = CompaniesAdapter()
     private val serviceAdapter = ServiceAdapter(this)
-    lateinit var companyList: SmoothViewPager
+//    lateinit var companyList: SmoothViewPager
+
+    private val companyAdapter = ViewPagerAdapter()
+
+    lateinit var companyList: ViewPager2
     lateinit var serviceList: RecyclerView
+
+    lateinit var pageIndicatorView: PageIndicatorView
 
     lateinit var shareApp: AppCompatImageButton
     lateinit var openTelegram: AppCompatImageButton
@@ -80,8 +89,9 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
         openTelegram = view.findViewById(R.id.telegram)
         openInstagram = view.findViewById(R.id.instagram)
         openMessenger = view.findViewById(R.id.message)
+        pageIndicatorView = view.findViewById(R.id.pageIndicatorView)
 
-        companyList.addOnPageChangeListener(this)
+
 
         serviceList = view.findViewById(R.id.service_list)
         serviceList.adapter = serviceAdapter
@@ -92,10 +102,12 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
         serviceList.layoutManager = GridLayoutManager(requireContext(), 2)
         serviceList.addItemDecoration(UniversalGridItemDecoration(2, padding))
 
-
-
         companyList.clipToPadding = false
+        companyList.clipChildren = false
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            companyList.clipToOutline = false
+        }
 
         homeVM.companiesLiveData.observe(viewLifecycleOwner, companiesObserver)
         homeVM.serviceLiveData.observe(viewLifecycleOwner, servicesObserver)
@@ -113,7 +125,6 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
             try {
                 val shareIntent = Intent(Intent.ACTION_SEND)
                 shareIntent.type = "text/plain"
-//            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Cinerama")
                 var shareMessage = "\nПозвольте мне рекомендовать вам это приложение\n\n"
                 shareMessage =
                     shareMessage + "https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID + "\n\n"
@@ -133,10 +144,36 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
                 )
                 startActivity(telegram)
             } catch (e: ActivityNotFoundException) {
-                Toast.makeText(requireContext(), "Iltimos telegram dasturini o'rnating", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Iltimos telegram dasturini o'rnating",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
+
+        setViewPagerSettings()
+
+
+    }
+
+    private fun setViewPagerSettings() {
+
+        companyList.apply {
+            clipToPadding = false   // allow full width shown with padding
+            clipChildren = false    // allow left/right item is not clipped
+            offscreenPageLimit = 2  // make sure left/right item is rendered
+        }
+
+// increase this offset to show more of left/right
+        val offsetPx = 120
+        companyList.setPadding(0, 0, offsetPx, 0)
+
+// increase this offset to increase distance between 2 items
+        val pageMarginPx = 0
+        val marginTransformer = MarginPageTransformer(pageMarginPx)
+        companyList.setPageTransformer(marginTransformer)
 
     }
 
@@ -145,12 +182,11 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
             if (state.isLoading) View.VISIBLE else View.GONE
 
         state.data?.let {
-            companiesAdapter.setData(it as List<Companies>)
+            companyAdapter.setData(it as List<Companies>)
+            pageIndicatorView.count = companyAdapter.itemCount
             this.data = it
-            companyList.adapter = companiesAdapter
-
+            companyList.adapter = companyAdapter
             company = it.firstOrNull()
-
         }
 
         state.error?.let {
@@ -173,21 +209,39 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
         }
     }
 
+    val callback = PageChangeCallback()
 
     override fun onResume() {
         super.onResume()
-        object : CountDownTimer(1000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
 
-            }
+        companyList.visibility=View.INVISIBLE
 
-            override fun onFinish() {
-                companyList.setCurrentItem(homeVM.getCurrentPosition(), true)
-            }
+        val position = homeVM.getCurrentPosition()
+        Log.d("StartFragment", "onResume: $position")
 
-        }.start()
+        Handler(Looper.myLooper()!!).postDelayed({
+            companyList.setCurrentItem(position, false)
+            serviceAdapter.setCurrentColor(position)
+
+            homeBackground.setBackgroundResource(getHomeBackGround(position))
+            requireActivity().setItemStatusBarColor(
+                Color.parseColor(getColorString(position)),
+                false
+            )
+
+            companyList.visibility=View.VISIBLE
+
+        }, 200)
+
+        companyList.registerOnPageChangeCallback(callback)
     }
 
+
+    override fun onStop() {
+        super.onStop()
+        companyList.unregisterOnPageChangeCallback(callback)
+
+    }
 
     override fun onServiceClick(services: Services) {
 
@@ -202,27 +256,30 @@ class StartFragment : Fragment(R.layout.fragment_start), StartContract.View,
         }
     }
 
-    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+    inner class PageChangeCallback : ViewPager2.OnPageChangeCallback() {
 
-    }
+        override fun onPageSelected(position: Int) {
+            super.onPageSelected(position)
 
 
-    override fun onPageSelected(position: Int) {
+            homeVM.saveCurrentPosition(position)
 
-        homeVM.saveCurrentPosition(position)
+            currentColorPosition = position
+            homeBackground.setBackgroundResource(getHomeBackGround(position))
+            requireActivity().setItemStatusBarColor(
+                Color.parseColor(getColorString(position)),
+                false
+            )
 
-        currentColorPosition = position
-        homeBackground.setBackgroundResource(getHomeBackGround(position))
-        requireActivity().setItemStatusBarColor(Color.parseColor(getColorString(position)), false)
+            serviceAdapter.setCurrentColor(position)
 
-        serviceAdapter.setCurrentColor(position)
+            data?.let {
+                this@StartFragment.company = it[position]
+            }
 
-        data?.let {
-            this.company = it[position]
+            pageIndicatorView.setSelected(position)
+
         }
     }
 
-    override fun onPageScrollStateChanged(state: Int) {
-
-    }
 }

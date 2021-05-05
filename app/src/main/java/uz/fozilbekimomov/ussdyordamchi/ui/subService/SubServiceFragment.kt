@@ -1,6 +1,7 @@
 package uz.fozilbekimomov.ussdyordamchi.ui.subService
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -21,7 +22,9 @@ import uz.fozilbekimomov.ussdyordamchi.core.list.UniversalGridItemDecoration
 import uz.fozilbekimomov.ussdyordamchi.core.list.adapters.DataAdapter
 import uz.fozilbekimomov.ussdyordamchi.core.models.DataState
 import uz.fozilbekimomov.ussdyordamchi.core.models.Datas
+import uz.fozilbekimomov.ussdyordamchi.core.utils.getColorString
 import uz.fozilbekimomov.ussdyordamchi.core.utils.getSubBackGround
+import uz.fozilbekimomov.ussdyordamchi.core.utils.setItemStatusBarColor
 
 
 /**
@@ -53,6 +56,11 @@ class SubServiceFragment : Fragment(R.layout.fragment_data), SubServiceContract.
         background = view.findViewById(R.id.sub_back)
 
         background.setBackgroundResource(getSubBackGround(args.position))
+
+        requireActivity().setItemStatusBarColor(
+            Color.parseColor(getColorString(args.position)),
+            false
+        )
 
         adapter.setCurrentColor(args.position)
 

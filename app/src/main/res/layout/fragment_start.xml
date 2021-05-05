@@ -28,19 +28,19 @@
             android:id="@+id/message"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:visibility="gone"
             android:layout_marginStart="6dp"
             android:background="?selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_messenger" />
+            android:src="@drawable/ic_messenger"
+            android:visibility="gone" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/instagram"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:visibility="gone"
             android:layout_marginStart="6dp"
             android:background="?selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_instagram" />
+            android:src="@drawable/ic_instagram"
+            android:visibility="gone" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/telegram"
@@ -68,18 +68,32 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
-    <uz.fozilbekimomov.ussdyordamchi.core.views.SmoothViewPager
+    <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/company_list"
         android:layout_width="match_parent"
         android:layout_height="170dp"
         android:layout_marginTop="8dp"
         android:clickable="true"
         android:focusable="true"
-        android:paddingRight="40dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title"
         tools:layout_height="170dp" />
+
+    <com.rd.PageIndicatorView
+        android:id="@+id/pageIndicatorView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/company_list"
+        app:piv_animationType="fill"
+        app:piv_dynamicCount="true"
+        app:piv_interactiveAnimation="true"
+        app:piv_selectedColor="@color/black"
+        app:piv_unselectedColor="@color/grey"
+        app:piv_viewPager="@id/company_list" />
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/service_list"
@@ -88,7 +102,7 @@
         android:layout_marginBottom="6dp"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/company_list"
+        app:layout_constraintTop_toBottomOf="@id/pageIndicatorView"
         app:spanCount="2"
         tools:itemCount="6"
         tools:listitem="@layout/item_service" />
